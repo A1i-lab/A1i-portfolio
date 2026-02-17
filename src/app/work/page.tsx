@@ -1,22 +1,30 @@
-import { Mdx } from '@/components/mdx-content'
-import PageTitle from '@/components/page-title'
-import { allWorks } from 'content-collections'
+import { work } from "@/resources/content";
+import { Heading, Text, Column, Card, Button } from "@once-ui-system/core";
 
-export default async function Work() {
-  const work = allWorks.find((work) => work.slug === 'index')!
-
+export default function WorkPage() {
   return (
-    <>
-      <PageTitle
-        title={work.title}
-        description={work.description}
-        fromColor={work.fromColor}
-        toColor={work.toColor}
-      />
-      <Mdx code={work.mdx} />
-    </>
-  )
+    <Column gap="xl">
+      <Heading variant="display-strong-l">{work.title}</Heading>
+      <Text variant="body-default-m">{work.description}</Text>
+
+      {work.experiences.map((project, index) => (
+        <Card key={index} padding="l">
+          <Heading variant="heading-strong-m">{project.role}</Heading>
+          <Text variant="body-default-s">{project.timeframe}</Text>
+
+          <ul>
+            {project.achievements.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+
+          {project.links?.map((link, i) => (
+            <Button key={i} href={link.href} variant="primary">
+              {link.label}
+            </Button>
+          ))}
+        </Card>
+      ))}
+    </Column>
+  );
 }
-
-
-
