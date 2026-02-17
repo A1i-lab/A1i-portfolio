@@ -165,7 +165,7 @@ const about: About = {
                         <Text weight="strong">Master Ingénierie des Données et Évaluations Économétriques</Text> (2024-2026)
                         <br />Machine Learning, Deep Learning, Data Mining, SQL avancé, Big Data (Spark),
                         Économétrie avancée (panel data, séries temporelles), Python, R, Git/GitHub.
-                        <br /><Text as="span" onBackground="brand-medium" weight="medium">
+                        <br /><Text as="span" onBackground="brand-medium" weight="default">
                             Stage de fin d'études : 6 mois dès avril 2026
                         </Text>
                     </>

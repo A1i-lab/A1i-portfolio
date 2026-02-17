@@ -1,37 +1,22 @@
-import { Column, Heading, Meta, Schema } from "@once-ui-system/core";
-import { baseURL, about, person, work } from "@/resources";
-import { Projects } from "@/components/work/Projects";
+import { Mdx } from '@/components/mdx-content'
+import PageTitle from '@/components/page-title'
+import { allWorks } from 'content-collections'
 
-export async function generateMetadata() {
-  return Meta.generate({
-    title: work.title,
-    description: work.description,
-    baseURL: baseURL,
-    image: `/api/og/generate?title=${encodeURIComponent(work.title)}`,
-    path: work.path,
-  });
-}
+export default async function Work() {
+  const work = allWorks.find((work) => work.slug === 'index')!
 
-export default function Work() {
   return (
-    <Column maxWidth="m" paddingTop="24">
-      <Schema
-        as="webPage"
-        baseURL={baseURL}
-        path={work.path}
+    <>
+      <PageTitle
         title={work.title}
         description={work.description}
-        image={`/api/og/generate?title=${encodeURIComponent(work.title)}`}
-        author={{
-          name: person.name,
-          url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
-        }}
+        fromColor={work.fromColor}
+        toColor={work.toColor}
       />
-      <Heading marginBottom="l" variant="heading-strong-xl" align="center">
-        {work.title}
-      </Heading>
-      <Projects />
-    </Column>
-  );
+      <Mdx code={work.mdx} />
+    </>
+  )
 }
+
+
+

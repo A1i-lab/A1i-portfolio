@@ -125,7 +125,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="260"
+            minWidth={260}
             style={{ flex: "1 1 260px" }}
           >
             <Text variant="heading-strong-m">Data Analysis</Text>
@@ -141,7 +141,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="260"
+            minWidth={260}
             style={{ flex: "1 1 260px" }}
           >
             <Text variant="heading-strong-m">Machine Learning</Text>
@@ -157,7 +157,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="260"
+            minWidth={260}
             style={{ flex: "1 1 260px" }}
           >
             <Text variant="heading-strong-m">Économétrie</Text>
@@ -173,7 +173,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="260"
+            minWidth={260}
             style={{ flex: "1 1 260px" }}
           >
             <Text variant="heading-strong-m">Déploiement Web</Text>
@@ -263,7 +263,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="300"
+            minWidth={300}
             style={{ flex: "1 1 300px" }}
           >
             <Tag size="l">Machine Learning / Streamlit</Tag>
@@ -297,7 +297,7 @@ export default function Home() {
             border="neutral-medium"
             background="surface"
             gap="12"
-            minWidth="300"
+            minWidth={300}
             style={{ flex: "1 1 300px" }}
           >
             <Tag size="l">Machine Learning / Santé</Tag>
