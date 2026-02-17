@@ -221,7 +221,37 @@ export interface Blog extends BasePageConfig {}
  * Work/projects page configuration.
  * @description Configuration for the Work/Projects page, including metadata and navigation label.
  */
-export interface Work extends BasePageConfig {}
+export interface Work extends BasePageConfig {
+  /** Work experience section */
+  experiences: Array<{
+    /** Company or project name */
+    company: string;
+    /** Timeframe of project */
+    timeframe: string;
+    /** Role or project title */
+    role: string;
+    /** Achievements in the project */
+    achievements: React.ReactNode[];
+    /** Images related to the project */
+    images?: Array<{
+      /** Image source path */
+      src: string;
+      /** Image alt text */
+      alt: string;
+      /** Image width ratio */
+      width: number;
+      /** Image height ratio */
+      height: number;
+    }>;
+    /** Links related to the project */
+    links?: Array<{
+      /** Link label */
+      label: string;
+      /** Link URL */
+      href: string;
+    }>;
+  }>;
+}
 
 /**
  * Gallery page configuration.

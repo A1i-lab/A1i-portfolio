@@ -1,0 +1,23 @@
+import { MDXRemote, MDXRemoteProps } from 'next-mdx-remote/rsc';
+import { highlight } from 'sugar-high';
+import React from 'react';
+
+function Code({ children, ...props }: any) {
+  let codeHTML = highlight(children);
+  return <code dangerouslySetInnerHTML={{ __html: codeHTML }} {...props} />;
+}
+
+const components = {
+  code: Code,
+};
+
+export function Mdx(props: MDXRemoteProps) {
+  return (
+    <MDXRemote
+      {...props}
+      components={{ ...components, ...(props.components || {}) }}
+    />
+  );
+}
+
+
