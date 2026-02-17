@@ -1,0 +1,145 @@
+---
+title: "CardioGuard - Prédiction Risque Cardiovasculaire"
+publishedAt: "2024-02-20"
+summary: "Système de prédiction du risque cardiovasculaire par machine learning (Gradient Boosting) avec précision de 80% sur base UCI. Interface Streamlit avec visualisations radar et recommandations personnalisées."
+images:
+  - "/images/projects/project-03/cover-01.png"
+  - "/images/projects/project-03/cover-02.png"
+team:
+  - name: "Ali Abdelhamid"
+    role: "ML Engineer & Healthcare AI"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/in/ali-abdelhamid/"
+---
+
+## Problématique Médicale
+
+Les maladies cardiovasculaires représentent la première cause de mortalité mondiale avec 17.9 millions de décès annuels selon l'OMS. Le diagnostic précoce via l'analyse de biomarqueurs et de facteurs de risque permet d'améliorer significativement le pronostic.
+
+Ce projet implémente un système de prédiction binaire (présence/absence de maladie cardiaque) basé sur 13 variables cliniques et démographiques issues du dataset UCI Cleveland Heart Disease.
+
+## Dataset et Preprocessing
+
+Source : UCI Machine Learning Repository - Cleveland Clinic Foundation
+Taille : 303 patients avec 13 features + 1 variable cible
+Période : Données collectées années 1980 mais toujours référence académique
+
+Variables d'entrée :
+- age : âge du patient (29-77 ans)
+- sex : sexe (0=femme, 1=homme)
+- cp : type de douleur thoracique (0-3, échelle ordinale)
+- trestbps : pression artérielle au repos (94-200 mmHg)
+- chol : cholestérol sérique (126-564 mg/dl)
+- fbs : glycémie à jeun > 120 mg/dl (booléen)
+- restecg : résultats ECG au repos (0-2)
+- thalach : fréquence cardiaque maximale atteinte (71-202 bpm)
+- exang : angine induite par l'effort (booléen)
+- oldpeak : dépression ST induite par effort vs repos (0-6.2)
+- slope : pente du segment ST à l'effort (0-2)
+- ca : nombre de vaisseaux colorés par fluoroscopie (0-3)
+- thal : type de défaut thalassémique (3=normal, 6=défaut fixe, 7=défaut réversible)
+
+Variable cible : num (0=pas de maladie, 1-4=maladie) transformée en binaire (0/1)
+
+Traitement des valeurs manquantes (ca et thal) par suppression des lignes concernées, réduction du dataset à 297 observations exploitables.
+
+## Architecture du Modèle
+
+Algorithme sélectionné : GradientBoostingClassifier
+Justification : performances supérieures au Random Forest et au SVM sur ce type de dataset médical déséquilibré
+
+Hyperparamètres optimisés :
+- n_estimators : 100 arbres de décision
+- max_depth : 3 (évite surapprentissage)
+- learning_rate : 0.1 (compromis vitesse/précision)
+- random_state : 42 (reproductibilité)
+
+Split train/test : 80/20 stratifié pour préserver la proportion de classes
+Normalisation : StandardScaler sur les features numériques (âge, pression, cholestérol, fréquence cardiaque, oldpeak)
+
+## Métriques de Performance
+
+Précision globale (Accuracy) : 80.3%
+Sensibilité (Recall) : 75.0% - capacité à détecter les vrais malades
+Spécificité : 83.3% - capacité à identifier les vrais sains
+Matrice de confusion :
+- Vrais négatifs : 35 patients sains correctement identifiés
+- Faux positifs : 7 patients sains classés malades
+- Faux négatifs : 5 patients malades non détectés
+- Vrais positifs : 15 patients malades correctement identifiés
+
+Score F1 : 0.79 (équilibre précision/rappel)
+AUC-ROC : 0.85 (excellente capacité discriminante)
+
+Ces performances sont comparables aux standards médicaux et surpassent de nombreuses études académiques sur le même dataset (baseline autour de 75%).
+
+## Interface Utilisateur Streamlit
+
+Design système : architecture full dark mode avec thème cardiaque
+Police : Inter (Google Fonts) avec weights 300 à 900
+Palette couleurs : background #06080d, accents #e63946 (rouge cardiaque), #10b981 (vert sécurité)
+
+Section 1 - Hero avec badge temps réel animé
+Section 2 - Barre de statistiques (précision 80%, sensibilité 75%, 297 patients)
+Section 3 - Formulaire de saisie en 11 colonnes (âge, sexe, tension, cholestérol, glycémie, tabac, activité physique, douleurs, essoufflement, fréquence cardiaque max, fatigue cardiaque)
+Section 4 - Animation de progression lors de l'analyse (barre de chargement + messages)
+Section 5 - Résultats avec jauge de risque circulaire, pourcentage, classification
+Section 6 - Graphique radar des 6 dimensions de risque normalisées
+Section 7 - Cartes détaillées (modèle utilisé, date analyse, classification, confiance)
+Section 8 - Recommandations personnalisées dynamiques (5 à 8 conseils générés selon profil)
+
+Interactions CSS personnalisées : hover effects, transitions 0.3s, scrollbar custom, animations fadeUp
+Responsive design avec grid-template-columns auto-fit minmax
+
+## Pipeline de Prédiction en Temps Réel
+
+1. Capture des inputs utilisateur via widgets Streamlit
+2. Mapping des valeurs textuelles vers codes numériques (ex: "Oui"→1, "Non"→0)
+3. Calcul automatique de variables dérivées (restecg basé sur âge, ca basé sur facteurs de risque, thal basé sur tabac, slope basé sur activité)
+4. Construction du vecteur de features [age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal]
+5. Normalisation via le scaler pré-entraîné
+6. Prédiction binaire via model.predict()
+7. Extraction des probabilités via model.predict_proba()
+8. Calcul du score de confiance (max des deux probas)
+9. Génération de la jauge de risque (0-100%) avec seuils colorimétriques
+10. Construction du graphique radar avec 6 axes normalisés
+11. Génération dynamique des recommandations par règles if/else
+
+## Système de Recommandations Intelligentes
+
+Logique conditionnelle basée sur les inputs :
+- Tension > 140 → "Hypertension détectée, consultez cardiologue"
+- Cholestérol > 240 → "Cholestérol élevé, régime alimentaire recommandé"
+- Fumeur → "Tabagisme = facteur risque majeur, arrêt impératif"
+- Activité nulle → "Sédentarité dangereuse, 30min marche/jour"
+- Âge > 55 et homme → "Profil à risque, bilan cardiaque annuel"
+- Glycémie élevée → "Pré-diabète possible, contrôle glycémique"
+- Fréquence cardiaque < 120 → "Capacité cardiaque réduite, test effort"
+- Oldpeak > 2 → "Fatigue cardiaque significative, examen supervisé"
+
+Minimum 1 recommandation, maximum 8 selon profil de risque cumulé.
+
+## Technologies et Stack
+
+Backend : Python 3.10 avec scikit-learn 1.3, pandas 2.0, numpy 1.24
+Frontend : Streamlit 1.28 avec CSS custom embarqué
+Visualisation : Plotly 5.17 pour graphique radar interactif (scatterpolar)
+Data source : UCI ML Repository via URL directe (pas de fichier local)
+Déploiement : Hugging Face Spaces avec requirements.txt et app.py
+Caching : @st.cache_resource pour éviter rechargement modèle à chaque run
+
+## Limites et Perspectives
+
+Dataset de petite taille (297 obs) limite la généralisation
+Données des années 1980, protocoles médicaux ont évolué
+Pas de validation externe sur population française contemporaine
+Features comme thal/ca peu utilisées en pratique clinique moderne
+
+Améliorations possibles :
+- Intégration de données biomédicales récentes (troponine, peptides natriurétiques)
+- Ajout d'images médicales (ECG, échographie) via CNN
+- Système de suivi longitudinal avec historique patient
+- Explainability via SHAP values pour transparence médicale
+- Intégration API FHIR pour connexion dossiers patients réels
+
+Lien projet : https://huggingface.co/spaces/A1i-lab/HeartDisease

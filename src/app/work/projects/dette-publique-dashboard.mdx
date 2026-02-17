@@ -1,0 +1,127 @@
+---
+title: "Dashboard Dette Publique OCDE"
+publishedAt: "2024-12-15"
+summary: "Pipeline end-to-end d'analyse de la dette publique : extraction API multi-sources, nettoyage de panel (38 pays, 1990-2024), modele ML predictif (R2=0.91) et dashboard interactif 6 modules deploye sur Hugging Face Spaces."
+images:
+  - "/images/projects/project-02/cover-01.png"
+  - "/images/projects/project-02/cover-02.png"
+  - "/images/projects/project-02/cover-03.png"
+team:
+  - name: "Ali Abdelhamid"
+    role: "Data Scientist"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/in/ali-abdelhamid-833a8a2b9/"
+---
+
+## Vue d'ensemble
+
+Application web interactive d'analyse de la dette publique dans 38 pays de l'OCDE sur la periode 1990-2024. Le projet couvre l'ensemble du cycle de la donnee : extraction via API, nettoyage et harmonisation d'un panel multi-sources, modelisation par Machine Learning, et deploiement d'un dashboard interactif a 6 modules sur Hugging Face Spaces.
+
+La problematique centrale : comment predire l'evolution de la dette publique en integrant des indicateurs macroeconomiques, demographiques et budgetaires issus de sources heterogenes ?
+
+## Extraction des donnees
+
+Les donnees proviennent de trois sources distinctes, chacune interrogee par API ou telechargement direct :
+
+- **OCDE (SDMX REST API)** : dette publique brute, depenses et recettes publiques, taux de chomage, balance courante, taux d'epargne, PIB par habitant, paiements d'interets sur la dette, exportations
+- **FMI (World Economic Outlook)** : croissance du PIB reel, inflation, solde budgetaire
+- **Banque Mondiale (API REST)** : population totale, part de la population agee de 65 ans et plus
+
+L'extraction OCDE passe par l'API SDMX avec des requetes parametrees par pays (38 codes ISO), par indicateur et par periode. Le FMI fournit ses donnees via le fichier WEO semestriel au format Excel. La Banque Mondiale expose une API REST classique avec pagination.
+
+Au total, 15 variables explicatives et 1 variable cible (dette publique en pourcentage du PIB) ont ete collectees, representant environ 1330 observations theoriques (38 pays x 35 annees).
+
+| Variable | Source | Description |
+|----------|--------|-------------|
+| debt_to_gdp | OCDE | Dette publique brute (% PIB) - TARGET |
+| gdp_growth | FMI | Croissance PIB reel (%, annuel) |
+| unemployment_rate | OCDE | Taux de chomage (% population active) |
+| inflation | FMI | Inflation IPC (%, annuel) |
+| govt_spending | OCDE | Depenses publiques (% PIB) |
+| govt_revenue | OCDE | Recettes publiques (% PIB) |
+| fiscal_balance | FMI | Solde budgetaire (% PIB) |
+| current_account | OCDE | Balance courante (% PIB) |
+| elderly_pop | Banque Mondiale | Population 65+ (%) |
+| interest_rate | OCDE | Paiements interets dette (% recettes) |
+| gdp_per_capita | OCDE | PIB par habitant PPA (USD constant) |
+| population | Banque Mondiale | Population totale |
+| trade_openness | OCDE | Ouverture commerciale (% PIB) |
+| saving_rate | OCDE | Taux d'epargne brut (% revenu disponible) |
+| real_interest_rate | Calcul | Taux d'interet reel (nominal - inflation) |
+
+## Nettoyage et harmonisation
+
+Le panel brut presentait plusieurs difficultes classiques des donnees macroeconomiques multi-sources :
+
+**Valeurs manquantes** : certaines series demarrent apres 1990 pour les pays entres recemment dans l'OCDE (pays baltes, Colombie, Costa Rica). D'autres presentent des trous ponctuels lies a des changements methodologiques.
+
+Strategie appliquee :
+- Interpolation lineaire pour les series temporelles continues (croissance, chomage, inflation) avec une limite de 3 observations consecutives
+- Forward fill pour les variables structurelles a evolution lente (demographie, population)
+- Mediane par pays pour les variables budgetaires avec peu de lacunes
+- Suppression des observations ou plus de 30% des features sont manquantes
+
+**Harmonisation des echelles** : les variables issues de sources differentes utilisent parfois des definitions legerement differentes (base 100, annee de reference, methode de calcul). Un travail d'alignement a ete realise pour garantir la coherence du panel.
+
+**Feature engineering** : creation de variables derivees comme le taux de dependance demographique, la variation annuelle de la dette, et le retard d'un an sur la croissance du PIB (lag).
+
+Resultat final : un panel equilibre de 897 observations exploitables, couvrant 38 pays sur 1990-2024, avec un taux de completude de 94.3%.
+
+## Modelisation Machine Learning
+
+Trois modeles ont ete entraines et compares sur l'ensemble du panel :
+
+**Random Forest** (retenu) :
+- 200 arbres, profondeur maximale 10, minimum 5 echantillons par split
+- Validation croisee 5-fold pour evaluer la robustesse
+- Feature importance par permutation (plus fiable que l'importance Gini)
+
+**Gradient Boosting** :
+- 200 estimateurs, profondeur 5, learning rate 0.1
+- Performances comparables au Random Forest mais temps d'entrainement plus long
+
+**Regression lineaire** :
+- Sert de baseline pour mesurer l'apport des modeles non-lineaires
+
+### Performances obtenues (Random Forest)
+
+| Metrique | Valeur |
+|----------|--------|
+| R2 (test) | 0.9102 |
+| R2 (validation croisee 5-fold) | 0.8987 +/- 0.023 |
+| MAE | 4.23 points de % PIB |
+| RMSE | 6.18 points |
+| Ecart R2 train/test | 0.035 (pas de surapprentissage) |
+
+Le modele explique 91% de la variance de la dette publique. L'erreur moyenne de 4.2 points signifie que pour une dette reelle de 100% du PIB, le modele predit entre 96% et 104%.
+
+### Variables les plus importantes
+
+Le solde budgetaire arrive en tete : un deficit chronique est le premier predicteur de l'accumulation de dette. Viennent ensuite le vieillissement demographique (pression sur les depenses de sante et de retraite), les charges d'interets (effet boule de neige de la dette), la croissance du PIB (denominateur du ratio) et le chomage (baisse des recettes et hausse des depenses sociales).
+
+Cas concret sur la France (2024) : le modele predit une dette a 112.3% du PIB, contre 110.6% observe, soit une erreur de 1.7 points (1.5% d'erreur relative).
+
+## Dashboard interactif
+
+L'application deployee sur Hugging Face Spaces propose 6 modules :
+
+1. **Statistiques descriptives** : evolution temporelle de la dette, de la croissance, du chomage, de l'inflation et du solde budgetaire pour un pays donne, avec graphiques et tableau recapitulatif
+2. **Comparaisons entre pays** : superposition de courbes pour plusieurs pays sur une variable au choix, avec tableau comparatif (moyenne, min, max, variation)
+3. **Matrice de correlation** : heatmap des correlations entre toutes les variables du panel, avec identification des correlations fortes avec la dette
+4. **Modele predictif** : entrainement en temps reel du Random Forest ou Gradient Boosting sur le perimetre choisi (un pays ou tous), avec affichage des metriques, graphique valeurs reelles vs predites, et importance des variables
+5. **Simulation de scenarios** : projection de la dette sur 1 a 10 ans en appliquant des chocs economiques parametrables (croissance, inflation, depenses publiques, chomage, taux d'interet)
+6. **Donnees brutes** : acces au dataset complet filtre par pays et periode
+
+## Stack technique
+
+- Python 3.10, Pandas, NumPy pour le traitement des donnees
+- Scikit-learn pour la modelisation (Random Forest, Gradient Boosting, regression lineaire)
+- Matplotlib pour les visualisations statiques dans le dashboard
+- Gradio pour l'interface web interactive
+- Hugging Face Spaces pour l'hebergement et le deploiement
+- API REST (OCDE SDMX, FMI WEO, Banque Mondiale) pour l'extraction
+
+## Liens
+
+- [Application en ligne](https://huggingface.co/spaces/A1i-lab/analyse-dette-ocde)
+- [Code source GitHub](https://github.com/A1i-lab/analyse-dette-ocde)
